@@ -22,7 +22,7 @@ class Macro_views
             <tr>
                 <td style="width: 100%">预约时间</td>
                 <td>
-                   <input name="booking_time" type="datetime-local"/>
+                   <input name="booking_time"  value="<?php echo $view->booking_time ?>" type="datetime-local"/>
 
                 </td>
             </tr>
