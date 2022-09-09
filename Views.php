@@ -6,7 +6,6 @@ class Macro_views
 
     public static function booking_cus_view($view)
     {
-
         ?>
         <table>
             <tr>
@@ -16,7 +15,6 @@ class Macro_views
                        <option value="0" <?php echo $view->booking_status == '0' ? 'selected':''?>>未签到</option>
                        <option value="1" <?php echo $view->booking_status == '1' ? 'selected':''?>>已签到</option>
                     </select>
-
                 </td>
             </tr>
             <tr>

@@ -2,6 +2,11 @@
 
 require_once 'Views.php';
 
+/**
+ * @author  winter_986@qq.com
+ * @name Macro_api WP后端插件
+ *
+ */
 class Macro_api
 {
 
@@ -71,29 +76,25 @@ class Macro_api
                     'not_found' => '没有找到',
                     'not_found_in_trash' => '没有发现'
                 ),
-
-
                 'show_ui' => true,
                 'show_in_menu' => true,
                 'public' => true,
                 'description' => '预约管理',
                 'has_archive' => false,
-                'show_in_rest'=>false,
+                'show_in_rest' => false,
                 'supports' => [
                     'title',
                     'author'
                 ]
             )
         );
-
-
     }
 
 
     private static function booking_view_ext()
     {
-        add_meta_box('macro_review_meta_box',
-            '预约', function ($view) {
+        add_meta_box('macro_review_meta_box', '预约',
+            function ($view) {
                 Macro_views::booking_cus_view($view);
             },
             'macro_booking_record', 'normal', 'high'
@@ -104,7 +105,6 @@ class Macro_api
     private static function booking_cus_save($post_id, $view)
     {
         if ($view->post_type == 'macro_booking_record') {
-            // Store data in post meta table if present in post data
             if (isset($_POST['booking_time']) && $_POST['booking_time'] != '') {
                 update_post_meta($post_id, 'booking_time', $_POST['booking_time']);
             }
@@ -114,6 +114,41 @@ class Macro_api
         }
     }
 
+
+    private static function bookingListQuery($request): array
+    {
+        $cookie = $request->get_param('token');
+        $is_login = wp_validate_auth_cookie($cookie, 'macro');
+        if ($is_login) {
+            $args = array(
+                'post_type' => 'macro_booking_record',
+                'posts_per_page' => 10,
+            );
+            $data = (new WP_Query($args))->posts;
+            foreach ($data as $key => $post) {
+                $post->booking_status = get_post_meta($post->ID, 'booking_status', true);
+                $post->booking_time = get_post_meta($post->ID, 'booking_time', true);
+
+            }
+
+            return ['code' => 1, 'msg' => 'SUCCESS', 'data' => $data];
+        } else {
+            return ['code' => -1, 'msg' => '请先登录', 'data' => null];
+        }
+
+
+    }
+
+
+    private static function bookingSignIn($request): array
+    {
+
+        $username = $request->get_param('username');
+        $password = $request->get_param('password');
+        $user = wp_authenticate($username, $password);
+        return ['code' => 1, 'msg' => 'success', 'user' => $user, 'token' => wp_generate_auth_cookie($user->ID, time() + 7200, 'macro')];
+
+    }
 
     private static function register_api()
     {
@@ -132,42 +167,6 @@ class Macro_api
             },
         ));
     }
-
-    private static function bookingListQuery($request): array
-    {
-        $cookie = $request->get_param('token');
-        $is_login = wp_validate_auth_cookie($cookie,'macro');
-        if($is_login){
-            $args = array(
-                'post_type'      => 'macro_booking_record',
-                'posts_per_page' => 10,
-            );
-            $data= (new WP_Query($args))->posts;
-            foreach ( $data as $key => $post ) {
-                $post->booking_status = get_post_meta( $post->ID, 'booking_status', true );
-                $post->booking_time = get_post_meta( $post->ID, 'booking_time', true );
-
-            }
-
-            return ['code'=>1,'msg'=>'SUCCESS','data'=>$data];
-        }else{
-            return ['code'=>-1,'msg'=>'请先登录','data'=>null];
-        }
-
-
-    }
-
-
-    private static function bookingSignIn($request): array
-    {
-
-        $username =  $request->get_param('username');
-        $password = $request->get_param('password');
-        $user = wp_authenticate($username,$password);
-        return  ['code'=>1,'msg'=>'success','user'=>$user,'token'=>wp_generate_auth_cookie($user->ID,time()+7200,'macro')];
-
-    }
-
 
 
 }
