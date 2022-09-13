@@ -23,21 +23,21 @@ class Hooks
             if (isset($_POST['booking_status']) && $_POST['booking_status'] != '') {
                 update_post_meta($post_id, 'booking_status', $_POST['booking_status']);
             }
+
+
         }
     }
 
     public static function booking_admin_column($column, $post_id)
     {
         if ($column == 'booking_status') {
-            $bg = get_post_meta($post_id, 'booking_status', true) == '0' ? 'tomato' : '#578fff';
-            echo "<span style='background:$bg;padding:4px 10px;box-shadow: 0 1px 4px 2px rgba(0,0,0,0.1) ;cursor: pointer;border-radius: 15px;color: #fff'>" . (get_post_meta($post_id, 'booking_status', true) == '0' ? '未使用' : '已使用') . '</span>';
+            Macro_views::booking_status_change($post_id);
         }
         if ($column == 'booking_time') {
             echo str_replace('T', ' ', get_post_meta($post_id, 'booking_time', true));
         }
 
     }
-
 
 
     public static function booking_admin_columns($columns)
@@ -84,6 +84,40 @@ class Hooks
     }
 
 
+    public static function change_booking_status()
+    {
+        check_ajax_referer('winter_986@qq.com');
+        $post_id = $_POST['post_id'];
+        $args = array(
+            'post_type' => 'macro_booking_record',
+            'posts_per_page' => 10,
+            'p' =>$post_id
+        );
+        $data = (new WP_Query($args))->posts;
+        if(count($data)  != 1){
+            wp_send_json(['code'=>-1,'msg'=>'操作失败:内容不存在！','data'=>null]);
+        }
+        if(get_post_meta($post_id,'booking_status',true)['booking_status'] == '0'){
+            update_post_meta($post_id, 'booking_status', 1);
+            wp_send_json(['code'=>1,'msg'=>'操作成功','data'=>null]);
+        }else{
+            wp_send_json(['code'=>1,'msg'=>'操作失败,已经更改过！']);
+        }
+    }
+
+    public static function loadJs()
+    {
+
+        wp_enqueue_script('ajax-script', plugins_url('/assets/utils.js', __FILE__));
+        wp_localize_script(
+            'ajax-script',
+            'winter_ajax_obj',
+            array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('winter_986@qq.com'),
+            )
+        );
+    }
 
 
 }

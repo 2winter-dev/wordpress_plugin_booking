@@ -41,10 +41,15 @@ class Apis
         $res = wp_insert_post([
             'post_author' => $this->user->ID,
             'post_title'=>$post_name,
+            'post_status'=>'publish',
             'post_name'=>$post_name,
             'post_type'=>'macro_booking_record',
+            'meta_input'=>[['booking_time'=>'2022'],['booking_status'=>0]]
 
         ]);
+        update_post_meta($res, 'booking_status', 0);
+        update_post_meta($res, 'booking_time', '2022/09/02 18:00:00');
+
 
         return ['code' => 1, 'data' =>['booking_id'=>$res],'msg'=>'SUCCESS'];
     }
@@ -116,7 +121,7 @@ class Apis
         $username = sanitize_user($this->request->get_param('username'));
         $password = trim($this->request->get_param('password'));
         $user = wp_authenticate($username, $password);
-        return ['code' => 1, 'msg' => 'success', 'user' => $user, 'token' => wp_generate_auth_cookie($user->ID, time() + 7200, 'macro')];
+        return ['code' => 1, 'msg' => 'success', 'user' => $user, 'token' => wp_generate_auth_cookie($user->ID, time() + 720000, 'macro')];
 
     }
 
