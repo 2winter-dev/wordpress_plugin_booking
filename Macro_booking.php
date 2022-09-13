@@ -17,8 +17,8 @@
  */
 
 
-require_once 'Macro_api.php';
-$MACRO = new Macro_api();
+require_once 'Winter.php';
+$MACRO = new Winter;
 
 
 
