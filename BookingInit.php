@@ -90,6 +90,7 @@ class BookingInit
             'callback' => function ($request) {
                 return (new Apis($request))->bookingSignIn();
             },
+            'permission_callback' => '__return_true'
         ));
 
         //rest query booking list by user
@@ -98,6 +99,7 @@ class BookingInit
             'callback' => function ($request) {
                 return (new Apis($request))->bookingListQuery();
             },
+            'permission_callback' => '__return_true'
         ));
 
         //rest signUp
@@ -106,6 +108,7 @@ class BookingInit
             'callback' => function ($request) {
                 return (new Apis($request))->bookingSignUp();
             },
+            'permission_callback' => '__return_true'
         ));
 
         //rest create new booking
@@ -114,6 +117,7 @@ class BookingInit
             'callback' => function ($request) {
                 return (new Apis($request))->bookingCreate();
             },
+            'permission_callback' => '__return_true'
         ));
 
 
@@ -123,6 +127,7 @@ class BookingInit
             'callback' => function ($request) {
                 return (new Apis($request))->bookingStatusUpdate();
             },
+            'permission_callback' => '__return_true'
         ));
 
 

@@ -72,7 +72,11 @@ class Apis
         try {
             $booking_course_title = $booking_course_title[0];
             $booking_course_id = $this->request->get_param('course_id');
-            $user_orders = current((new WC_Order($booking_course_id))->get_items());
+            $user_orders = (new WC_Order($booking_course_id))->get_items();
+            if(count($user_orders) != 1){
+                return ['code' => -1, 'msg' => 'course not found', 'data' => null];
+            }
+            $user_orders = current($user_orders);
             $meta_data = current($user_orders->get_meta_data());
             $user_all_booking_count = (int)$meta_data->value;
             //Check the available schedule of the course
