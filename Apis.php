@@ -69,7 +69,6 @@ class Apis
         if (count($booking_course_title) != 2) {
             return ['code' => -1, 'msg' => 'title format invalid', 'data' => null];
         }
-        $user_all_booking_count = 0;
         try {
             $booking_course_title = $booking_course_title[0];
             $booking_course_id = $this->request->get_param('course_id');
@@ -77,8 +76,7 @@ class Apis
             $meta_data = current($user_orders->get_meta_data());
             $user_all_booking_count = (int)$meta_data->value;
             //Check the available schedule of the course
-            //
-            //
+
 
         } catch (Exception $exception) {
             return ['code' => -1, 'msg' => $exception->getMessage(), 'data' => null];
@@ -108,8 +106,6 @@ class Apis
         update_post_meta($res, 'booking_time', $booking_time);
         update_post_meta($res, 'booking_course_id', $booking_course_id);
         update_post_meta($res, 'booking_course_title', $booking_course_title);
-
-
         return ['code' => 1, 'data' => ['booking_id' => $res, 'left' => $user_all_booking_count - $user_booking_count], 'msg' => 'SUCCESS'];
     }
 

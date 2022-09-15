@@ -3,7 +3,7 @@
  * Admin Booking Manage pane JS
  * @type {{changeBookingStatus(*): void}}
  */
-const Macro_js = {
+const omiJS = {
     changeBookingStatus(post_id){
         if(winter_ajax_obj){
             let formData = new FormData();

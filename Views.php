@@ -36,7 +36,7 @@ class Macro_views
     public static function booking_status_change($post_id)
     {
         $bg = get_post_meta($post_id, 'booking_status', true) == '0' ? 'tomato' : '#578fff';
-        echo "<span onclick='Macro_js.changeBookingStatus($post_id)'  style='background:$bg;padding:4px 10px;cursor: pointer;border-radius: 5px;color: #fff'>" . (get_post_meta($post_id, 'booking_status', true) == '0' ? 'wait' : 'finish') . '</span>';
+        echo "<span onclick='omiJS.changeBookingStatus($post_id)'  style='background:$bg;padding:4px 10px;cursor: pointer;border-radius: 5px;color: #fff'>" . (get_post_meta($post_id, 'booking_status', true) == '0' ? 'wait' : 'finish') . '</span>';
     }
 
 }
