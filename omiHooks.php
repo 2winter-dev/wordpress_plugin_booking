@@ -1,11 +1,13 @@
 <?php
-
-class Hooks
+/**
+ * @author  omibeaver
+ * Booking Hoos list
+ */
+class omiHooks
 {
-
     public static function booking_view_ext()
     {
-        add_meta_box('macro_review_meta_box', '预约',
+        add_meta_box('macro_review_meta_box', 'Booking',
             function ($view) {
                 Macro_views::booking_cus_view($view);
             },
@@ -36,17 +38,24 @@ class Hooks
         if ($column == 'booking_time') {
             echo str_replace('T', ' ', get_post_meta($post_id, 'booking_time', true));
         }
+        if($column == 'ID'){
+            echo $post_id;
+        }
 
     }
 
 
     public static function booking_admin_columns($columns)
     {
-        $columns['title'] = '预约课程|教练';
-        $columns['author'] = '顾客';
+
+        $columns['title'] = 'booking course|coach';
+        $columns['author'] = 'customer';
         unset($columns['date']);
-        $columns['booking_time'] = '预约时间';
-        $columns['booking_status'] = '预约状态';
+
+        $columns['booking_time'] = 'booking time';
+        $columns['booking_status'] = 'booking status';
+        $columns['ID'] = 'Record ID';
+
         return $columns;
     }
 
@@ -54,25 +63,25 @@ class Hooks
     {
         register_post_type('macro_booking_record',
             array(
-                'label' => '预约记录',
+                'label' => 'booking record',
                 'labels' => array(
-                    'name' => '课程预约',
-                    'singular_name' => '课程预约清单',
-                    'add_new' => '新增预约',
-                    'add_new_item' => '新增预约',
-                    'edit' => '更新',
-                    'edit_item' => '更新',
-                    'new_item' => '创建预约',
-                    'view' => '详情',
-                    'view_item' => '查看预约详情',
-                    'search_items' => '查询预约',
-                    'not_found' => '没有找到',
-                    'not_found_in_trash' => '没有发现'
+                    'name' => 'course booking',
+                    'singular_name' => 'course booking list',
+                    'add_new' => 'add booking record',
+                    'add_new_item' => 'add booking record',
+                    'edit' => 'update booking record',
+                    'edit_item' => 'update',
+                    'new_item' => 'create',
+                    'view' => 'detail',
+                    'view_item' => 'to detail',
+                    'search_items' => 'query',
+                    'not_found' => 'not found',
+                    'not_found_in_trash' => 'not found'
                 ),
                 'show_ui' => true,
                 'show_in_menu' => true,
                 'public' => true,
-                'description' => '预约管理',
+                'description' => 'Booking Manage',
                 'has_archive' => false,
                 'show_in_rest' => false,
                 'supports' => [
@@ -86,7 +95,7 @@ class Hooks
 
     public static function change_booking_status()
     {
-        check_ajax_referer('winter_986@qq.com');
+        check_ajax_referer('omiBeaver');
         $post_id = $_POST['post_id'];
         $args = array(
             'post_type' => 'macro_booking_record',
@@ -95,13 +104,13 @@ class Hooks
         );
         $data = (new WP_Query($args))->posts;
         if(count($data)  != 1){
-            wp_send_json(['code'=>-1,'msg'=>'操作失败:内容不存在！','data'=>null]);
+            wp_send_json(['code'=>-1,'msg'=>'action failed:content not found！','data'=>null]);
         }
         if(get_post_meta($post_id,'booking_status',true)['booking_status'] == '0'){
             update_post_meta($post_id, 'booking_status', 1);
-            wp_send_json(['code'=>1,'msg'=>'操作成功','data'=>null]);
+            wp_send_json(['code'=>1,'msg'=>'success','data'=>null]);
         }else{
-            wp_send_json(['code'=>1,'msg'=>'操作失败,已经更改过！']);
+            wp_send_json(['code'=>1,'msg'=>'action failed']);
         }
     }
 
@@ -114,10 +123,45 @@ class Hooks
             'winter_ajax_obj',
             array(
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('winter_986@qq.com'),
+                'nonce' => wp_create_nonce('omiBeaver'),
             )
         );
     }
+
+    public static function closeUpdate(){
+        add_filter('pre_site_transient_update_core', function ($a){return null;});
+        add_filter('pre_site_transient_update_plugins',  function ($a){return null;});
+        add_filter('pre_site_transient_update_themes',  function ($a){return null;});
+        remove_action('admin_init', '_maybe_update_core');
+        remove_action('admin_init', '_maybe_update_plugins');
+        remove_action('admin_init', '_maybe_update_themes');
+    }
+
+
+    public static function removeRowBtn($actions,$post ){
+
+        if ( $post->post_type == "macro_booking_record" ) {
+            unset($actions['view']);
+            unset($actions['inline hide-if-no-js']);
+
+        }
+
+        return $actions;
+    }
+
+
+
+
+    public static function customOrderQuery($data, $post, $context): array
+    {
+
+        $data->data['booking_left'] = 2;
+
+        return $data;
+    }
+
+
+
 
 
 }

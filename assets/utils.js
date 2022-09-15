@@ -1,7 +1,9 @@
-
-
+/**
+ * * @author  omibeaver
+ * Admin Booking Manage pane JS
+ * @type {{changeBookingStatus(*): void}}
+ */
 const Macro_js = {
-
     changeBookingStatus(post_id){
         if(winter_ajax_obj){
             let formData = new FormData();
@@ -16,10 +18,10 @@ const Macro_js = {
                 body.json().then((data)=>{
                     alert(data.msg);
                     setTimeout(()=>{location.reload()},1000)
-                }).catch((e)=>alert(e.msg || '操作未完成'))
+                }).catch((e)=>alert(e.msg))
             })
         }else{
-            alert('初始化失败')
+            alert('init failed')
         }
 
     }
