@@ -75,8 +75,6 @@ class BookingInit
         //close auto-update tips.
         omiHooks::closeUpdate();
 
-
-
     }
 
 
@@ -126,6 +124,15 @@ class BookingInit
             'methods' => 'PUT',
             'callback' => function ($request) {
                 return (new Apis($request))->bookingStatusUpdate();
+            },
+            'permission_callback' => '__return_true'
+        ));
+
+
+        register_rest_route('macro', '/create_order', array(
+            'methods' => 'POST',
+            'callback' => function ($request) {
+                return (new Apis($request))->createOrder();
             },
             'permission_callback' => '__return_true'
         ));

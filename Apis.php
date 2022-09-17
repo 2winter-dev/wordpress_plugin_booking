@@ -58,6 +58,8 @@ class Apis
     public function bookingCreate(): array
     {
 
+
+
         if (!$this->user) return ['code' => -1, 'msg' => 'login invalid', 'data' => null];
         $post_name = $this->request->get_param('booking_name');
         $booking_time = $this->request->get_param('booking_time');
@@ -73,7 +75,7 @@ class Apis
             $booking_course_title = $booking_course_title[0];
             $booking_course_id = $this->request->get_param('course_id');
             $user_orders = (new WC_Order($booking_course_id))->get_items();
-            if(count($user_orders) != 1){
+            if (count($user_orders) != 1) {
                 return ['code' => -1, 'msg' => 'course not found', 'data' => null];
             }
             $user_orders = current($user_orders);
@@ -158,16 +160,16 @@ class Apis
         if (empty($this->request->get_param('start_booking_time')) || empty($this->request->get_param('end_booking_time'))) return ['code' => -1, 'msg' => 'params booking_time  invalid', 'data' => null];
         if (!date_create($this->request->get_param('start_booking_time')) || !date_create($this->request->get_param('end_booking_time'))) return ['code' => -1, 'msg' => 'params booking_time  invalid', 'data' => null];
         $start_booking_time = date_create($this->request->get_param('start_booking_time'));
-        $end_booking_time =  date_create($this->request->get_param('end_booking_time'));
+        $end_booking_time = date_create($this->request->get_param('end_booking_time'));
         $args = array(
             'post_type' => 'macro_booking_record',
             'posts_per_page' => 10,
             'author' => $this->user->ID,
-            'meta_query'=>[
-                'booking_time'=>
+            'meta_query' => [
+                'booking_time' =>
                     array(
-                        array('key'=>'booking_time','value'=>$start_booking_time->format('Y/m/d'),'compare'=>'>=','type' => 'DATE'),
-                        array('key'=>'booking_time','value'=>$end_booking_time->format('Y/m/d'),'compare'=>'<=','type' => 'DATE'),
+                        array('key' => 'booking_time', 'value' => $start_booking_time->format('Y/m/d'), 'compare' => '>=', 'type' => 'DATE'),
+                        array('key' => 'booking_time', 'value' => $end_booking_time->format('Y/m/d'), 'compare' => '<=', 'type' => 'DATE'),
                     )
 
             ]
@@ -191,6 +193,77 @@ class Apis
         $password = trim($this->request->get_param('password'));
         $user = wp_authenticate($username, $password);
         return ['code' => 1, 'msg' => 'success', 'user' => $user, 'token' => wp_generate_auth_cookie($user->ID, time() + 720000, 'macro')];
+
+    }
+
+
+    public function createOrder(): array
+    {
+        $data = [
+            'meta_data' => array( array(
+                'key' => 'pay_status',
+                'value' => '50%'
+            )),
+
+            'payment_method' => 'bacs',
+            'payment_method_title' => 'Direct Bank Transfer',
+            'set_paid' => true,
+            'billing' => [
+                'first_name' => 'testUser',
+                'last_name' => 'testUser',
+                'address_1' => '969 Market',
+                'address_2' => '',
+                'city' => 'San Francisco',
+                'state' => 'CA',
+                'postcode' => '94103',
+                'country' => 'US',
+                'email' => 'testUser@test.com',
+                'phone' => '(555) 555-5555'
+            ],
+            'shipping' => [
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'address_1' => '969 Market',
+                'address_2' => '',
+                'city' => 'San Francisco',
+                'state' => 'CA',
+                'postcode' => '94103',
+                'country' => 'US'
+            ],
+            'line_items' => [
+
+                [
+                    'product_id' => 65,
+                    'variation_id' =>70,
+                    'quantity' => 1,
+                    'total' => "1750"
+                ]
+            ],
+            'shipping_lines' => [
+                [
+                    'method_id' => 'flat_rate',
+                    'method_title' => 'Flat Rate',
+                    'total' => '0'
+                ]
+            ]
+        ];
+
+        try{
+
+           $data = wp_remote_post('https://msportz.com.hk/wp-json/wc/v3/orders?consumer_key=ck_1cf696d53c9471e047b06e006ad7f9c6ad6ad054
+&consumer_secret=cs_2e457341b6fb7cd33844cfa2bb3c02b90434b192',
+               array(
+                   'headers' => array( 'Content-Type' => 'application/json' ),
+                   'timeout' => 30,
+                   'body' => json_encode( $data ),
+               )
+           );
+
+        }catch (Exception $exception){
+            return ['code' => -1, 'msg' => 'SUCCESS', 'data' => $exception->getMessage()];
+        }
+
+        return ['code' => 1, 'msg' => 'SUCCESS', 'data' => $data];
 
     }
 
