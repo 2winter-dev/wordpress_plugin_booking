@@ -235,8 +235,7 @@ class Apis
                 [
                     'product_id' => 65,
                     'variation_id' =>70,
-                    'quantity' => 1,
-                    'total' => "1750"
+                    'quantity' => 1
                 ]
             ],
             'shipping_lines' => [
