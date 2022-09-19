@@ -10,6 +10,9 @@ class Apis
 
     private $request;
     private $user;
+    private const WOO_SECRET = 'cs_2e457341b6fb7cd33844cfa2bb3c02b90434b192';//可写secret
+    private const WOO_KEY = 'ck_1cf696d53c9471e047b06e006ad7f9c6ad6ad054';//可写key
+    private const REMOTE_URL = 'https://msportz.com.hk';
 
 
     function __construct($request)
@@ -57,7 +60,6 @@ class Apis
 
     public function bookingCreate(): array
     {
-
 
 
         if (!$this->user) return ['code' => -1, 'msg' => 'login invalid', 'data' => null];
@@ -199,8 +201,9 @@ class Apis
 
     public function createOrder(): array
     {
+        //默认订单数据
         $data = [
-            'meta_data' => array( array(
+            'meta_data' => array(array(
                 'key' => 'pay_status',
                 'value' => '50%'
             )),
@@ -234,7 +237,7 @@ class Apis
 
                 [
                     'product_id' => 65,
-                    'variation_id' =>70,
+                    'variation_id' => 70,
                     'quantity' => 1
                 ]
             ],
@@ -247,18 +250,17 @@ class Apis
             ]
         ];
 
-        try{
+        try {
 
-           $data = wp_remote_post('https://msportz.com.hk/wp-json/wc/v3/orders?consumer_key=ck_1cf696d53c9471e047b06e006ad7f9c6ad6ad054
-&consumer_secret=cs_2e457341b6fb7cd33844cfa2bb3c02b90434b192',
-               array(
-                   'headers' => array( 'Content-Type' => 'application/json' ),
-                   'timeout' => 30,
-                   'body' => json_encode( $data ),
-               )
-           );
+            $data = wp_remote_post(self::REMOTE_URL ."/wp-json/wc/v3/orders?consumer_key=" . self::WOO_KEY . "&consumer_secret=" . self::WOO_SECRET,
+                array(
+                    'headers' => array('Content-Type' => 'application/json'),
+                    'timeout' => 30,
+                    'body' => json_encode($data),
+                )
+            );
 
-        }catch (Exception $exception){
+        } catch (Exception $exception) {
             return ['code' => -1, 'msg' => 'SUCCESS', 'data' => $exception->getMessage()];
         }
 
