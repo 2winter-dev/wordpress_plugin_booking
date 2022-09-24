@@ -10,9 +10,9 @@ class Apis
 
     private $request;
     private $user;
-    private const WOO_SECRET = 'cs_2e457341b6fb7cd33844cfa2bb3c02b90434b192';//可写secret
-    private const WOO_KEY = 'ck_1cf696d53c9471e047b06e006ad7f9c6ad6ad054';//可写key
-    private const REMOTE_URL = 'https://msportz.com.hk';
+    private const WOO_SECRET = 'xxxx';//本地测试可写secret
+    private const WOO_KEY = 'xxx';//本地测试可写key
+    private const REMOTE_URL = 'xxxx';
 
 
     function __construct($request)
@@ -73,13 +73,19 @@ class Apis
         if (count($booking_course_title) != 2) {
             return ['code' => -1, 'msg' => 'title format invalid', 'data' => null];
         }
+
         try {
+
             $booking_course_title = $booking_course_title[0];
             $booking_course_id = $this->request->get_param('course_id');
+
             $user_orders = (new WC_Order($booking_course_id))->get_items();
+
             if (count($user_orders) != 1) {
                 return ['code' => -1, 'msg' => 'course not found', 'data' => null];
             }
+
+
             $user_orders = current($user_orders);
             $meta_data = current($user_orders->get_meta_data());
             $user_all_booking_count = (int)$meta_data->value;
@@ -100,7 +106,7 @@ class Apis
             ]
         );
         $user_booking_count = (new WP_Query($args))->post_count;
-        if ($user_booking_count > $user_all_booking_count) return ['code' => -1, 'msg' => 'The number of appointments has been used up', 'data' => null];
+        if ($user_booking_count > $user_all_booking_count+10) return ['code' => -1, 'msg' => 'The number of appointments has been used up', 'data' => null];
         $res = wp_insert_post([
             'post_author' => $this->user->ID,
             'post_title' => $post_name,
