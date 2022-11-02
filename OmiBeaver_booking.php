@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       OmiBeaverBooking
  * Plugin URI:        https://codecanyon.net/user/omibeaver/portfolio
- * Description:       Virtual goods course reservations Rest API
+ * Description:       小葵公文WP-REST插件
  * Version:           1.0.0
  * Requires at least: 5.2
  * Requires PHP:      7.2

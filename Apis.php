@@ -10,9 +10,7 @@ class Apis
 
     private $request;
     private $user;
-    private const WOO_SECRET = 'xxxx';//本地测试可写secret
-    private const WOO_KEY = 'xxx';//本地测试可写key
-    private const REMOTE_URL = 'xxxx';
+
 
 
     function __construct($request)
@@ -126,29 +124,29 @@ class Apis
     public function bookingSignUp(): array
     {
 
-        $user_name = sanitize_user($this->request->get_body_params()['user_name'] ?? '');
-        $password = trim($this->request->get_body_params()['password'] ?? '');
-        $user_email = trim($this->request->get_body_params()['user_email'] ?? '');
+        $user_name = sanitize_user($this->request->get_json_params()['user_name'] ?? '');
+        $password = trim($this->request->get_json_params()['password'] ?? '');
+        $user_email = trim($this->request->get_json_params()['user_email'] ?? '');
 
         if (!$user_name || !$password || !$user_email) {
-            return ['code' => -1, 'msg' => 'params error', 'data' => null];
+            return ['code' => -1, 'msg' => '用户名或者密码不完整', 'data' => null];
         }
 
-        if (strlen($user_name) > 20) {
-            return ['code' => -1, 'msg' => 'params error', 'data' => null];
+        if (strlen($user_name) > 80) {
+            return ['code' => -1, 'msg' => '用户名过长', 'data' => null];
         }
 
         if (!is_email($user_email)) {
-            return ['code' => -1, 'msg' => 'email error', 'data' => null];
+            return ['code' => -1, 'msg' => '邮箱格式有误', 'data' => null];
         }
 
         $user_id = username_exists($user_name);
         if (!$user_id && !email_exists($user_email)) {
             $user_id = wp_create_user($user_name, $password, $user_email);
-            return ['code' => 1, 'msg' => 'SUCCESS', 'data' => ['user_id' => $user_id]];
+            return ['code' => 200, 'msg' => '注册成功', 'data' => ['user_id' => $user_id]];
         } else {
 
-            return ['code' => -1, 'msg' => 'account exist', 'data' => null];
+            return ['code' => -1, 'msg' => '账号存在', 'data' => null];
         }
 
     }
@@ -197,82 +195,24 @@ class Apis
     public function bookingSignIn(): array
     {
 
-        $username = sanitize_user($this->request->get_param('username'));
-        $password = trim($this->request->get_param('password'));
+       $username = sanitize_user($this->request->get_json_params()['username']);
+        $password = trim($this->request->get_json_params()['password']);
+         if (!$username || !$password) {
+           return ['code' => -1, 'msg' => '用户名或者密码不完整', 'data' =>''];
+
+          }
+
         $user = wp_authenticate($username, $password);
-        return ['code' => 1, 'msg' => 'success', 'user' => $user, 'token' => wp_generate_auth_cookie($user->ID, time() + 720000, 'macro')];
+
+       if(is_wp_error($user)){
+
+		     return ['code' => -1, 'msg' => $user->get_error_message(), 'data' =>$_GET];
+	   }
+        return ['code' => 200, 'msg' => 'success', 'data' => ['user'=>$user,'token'=>wp_generate_auth_cookie($user->ID, time() + 72000, 'sunflwoer')] ];
 
     }
 
 
-    public function createOrder(): array
-    {
-        //默认订单数据
-        $data = [
-            'meta_data' => array(array(
-                'key' => 'pay_status',
-                'value' => '50%'
-            )),
-
-            'payment_method' => 'bacs',
-            'payment_method_title' => 'Direct Bank Transfer',
-            'set_paid' => true,
-            'billing' => [
-                'first_name' => 'testUser',
-                'last_name' => 'testUser',
-                'address_1' => '969 Market',
-                'address_2' => '',
-                'city' => 'San Francisco',
-                'state' => 'CA',
-                'postcode' => '94103',
-                'country' => 'US',
-                'email' => 'testUser@test.com',
-                'phone' => '(555) 555-5555'
-            ],
-            'shipping' => [
-                'first_name' => 'John',
-                'last_name' => 'Doe',
-                'address_1' => '969 Market',
-                'address_2' => '',
-                'city' => 'San Francisco',
-                'state' => 'CA',
-                'postcode' => '94103',
-                'country' => 'US'
-            ],
-            'line_items' => [
-
-                [
-                    'product_id' => 65,
-                    'variation_id' => 70,
-                    'quantity' => 1
-                ]
-            ],
-            'shipping_lines' => [
-                [
-                    'method_id' => 'flat_rate',
-                    'method_title' => 'Flat Rate',
-                    'total' => '0'
-                ]
-            ]
-        ];
-
-        try {
-
-            $data = wp_remote_post(self::REMOTE_URL ."/wp-json/wc/v3/orders?consumer_key=" . self::WOO_KEY . "&consumer_secret=" . self::WOO_SECRET,
-                array(
-                    'headers' => array('Content-Type' => 'application/json'),
-                    'timeout' => 30,
-                    'body' => json_encode($data),
-                )
-            );
-
-        } catch (Exception $exception) {
-            return ['code' => -1, 'msg' => 'SUCCESS', 'data' => $exception->getMessage()];
-        }
-
-        return ['code' => 1, 'msg' => 'SUCCESS', 'data' => $data];
-
-    }
 
 
 }
