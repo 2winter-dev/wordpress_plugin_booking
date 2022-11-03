@@ -10,9 +10,6 @@ class Apis
 
     private $request;
     private $user;
-
-
-
     function __construct($request)
     {
 
@@ -25,38 +22,42 @@ class Apis
     }
 
 
-    public function bookingStatusUpdate(): array
-    {
-        if (!$this->user) return ['code' => -1, 'msg' => 'token invalid', 'data' => null];
-        $post_id = $this->request->get_param('post_id');
-        $user_id = self::getUserByCookie($this->request->get_param('token'))->ID;
-        if (!$post_id) {
-            return ['code' => -1, 'msg' => 'params error', 'data' => null];
-        }
-        $args = array(
-            'post_type' => 'macro_booking_record',
-            'posts_per_page' => 10,
-            'p' => $post_id
-        );
-        $data = (new WP_Query($args))->posts;
-        if (count($data) != 1) {
-            return ['code' => -1, 'msg' => 'content not found', 'data' => null];
-        }
-        if ($data[0]->post_author != $user_id) {
-            return ['code' => -1, 'msg' => 'not permission', 'data' => null];
-        }
-        if (get_post_meta($post_id, 'booking_status', true)['booking_status'] == '0') {
-            update_post_meta($post_id, 'booking_status', 1);
-            return ['code' => 1, 'msg' => 'success', 'data' => null];
-        } else {
-            return ['code' => -1, 'msg' => 'had changed', 'data' => null];
+//    public function bookingStatusUpdate(): array
+//    {
+//        if (!$this->user) return ['code' => -1, 'msg' => 'token invalid', 'data' => null];
+//        $post_id = $this->request->get_param('post_id');
+//        $user_id = self::getUserByCookie($this->request->get_param('token'))->ID;
+//        if (!$post_id) {
+//            return ['code' => -1, 'msg' => 'params error', 'data' => null];
+//        }
+//        $args = array(
+//            'post_type' => 'macro_booking_record',
+//            'posts_per_page' => 10,
+//            'p' => $post_id
+//        );
+//        $data = (new WP_Query($args))->posts;
+//        if (count($data) != 1) {
+//            return ['code' => -1, 'msg' => 'content not found', 'data' => null];
+//        }
+//        if ($data[0]->post_author != $user_id) {
+//            return ['code' => -1, 'msg' => 'not permission', 'data' => null];
+//        }
+//        if (get_post_meta($post_id, 'booking_status', true)['booking_status'] == '0') {
+//            update_post_meta($post_id, 'booking_status', 1);
+//            return ['code' => 1, 'msg' => 'success', 'data' => null];
+//        } else {
+//            return ['code' => -1, 'msg' => 'had changed', 'data' => null];
+//
+//        }
+//
+//    }
 
-        }
 
-    }
-
-
-    public function bookingCreate(): array
+    /**
+     * 创建订阅订单
+     * @return array
+     */
+    public function PayRecordCreate(): array
     {
 
 
@@ -121,7 +122,9 @@ class Apis
         return ['code' => 1, 'data' => ['booking_id' => $res, 'left' => $user_all_booking_count - $user_booking_count], 'msg' => 'SUCCESS'];
     }
 
-    public function bookingSignUp(): array
+
+    //用户注册
+    public function signUp(): array
     {
 
         $user_name = sanitize_user($this->request->get_json_params()['user_name'] ?? '');
@@ -160,39 +163,8 @@ class Apis
     }
 
 
-    public function bookingListQuery(): array
-    {
-        if (!$this->user) return ['code' => -1, 'msg' => 'login invalid', 'data' => null];
-        if (empty($this->request->get_param('start_booking_time')) || empty($this->request->get_param('end_booking_time'))) return ['code' => -1, 'msg' => 'params booking_time  invalid', 'data' => null];
-        if (!date_create($this->request->get_param('start_booking_time')) || !date_create($this->request->get_param('end_booking_time'))) return ['code' => -1, 'msg' => 'params booking_time  invalid', 'data' => null];
-        $start_booking_time = date_create($this->request->get_param('start_booking_time'));
-        $end_booking_time = date_create($this->request->get_param('end_booking_time'));
-        $args = array(
-            'post_type' => 'macro_booking_record',
-            'posts_per_page' => 10,
-            'author' => $this->user->ID,
-            'meta_query' => [
-                'booking_time' =>
-                    array(
-                        array('key' => 'booking_time', 'value' => $start_booking_time->format('Y/m/d'), 'compare' => '>=', 'type' => 'DATE'),
-                        array('key' => 'booking_time', 'value' => $end_booking_time->format('Y/m/d'), 'compare' => '<=', 'type' => 'DATE'),
-                    )
-
-            ]
-        );
-
-        $data = (new WP_Query($args))->posts;
-        foreach ($data as $post) {
-            $post->booking_status = get_post_meta($post->ID, 'booking_status', true);
-            $post->booking_time = get_post_meta($post->ID, 'booking_time', true);
-
-        }
-        return ['code' => 1, 'msg' => 'SUCCESS', 'data' => $data];
-
-
-    }
-
-    public function bookingSignIn(): array
+   //用户登录
+    public function signIn(): array
     {
 
        $username = sanitize_user($this->request->get_json_params()['username']);
