@@ -43,7 +43,7 @@ class Sunflower
 
         //登录
         register_rest_route('sunflower', '/signIn', array(
-            'methods' => 'GET',
+            'methods' => 'POST',
             'callback' => function ($request) {
                 return (new Apis($request))->signIn();
             },
@@ -65,6 +65,15 @@ class Sunflower
           },
           'permission_callback' => '__return_true'
           ));
+
+         //添加收藏
+        register_rest_route('sunflower', '/likeAdd', array(
+            'methods' => ['POST'],
+            'callback' => function ($request) {
+                return (new Apis($request))->addUserLike();
+            },
+            'permission_callback' => '__return_true'
+        ));
     }
 }
 

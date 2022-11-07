@@ -10,13 +10,14 @@ class Apis
 
     private $request;
     private $user;
+
     function __construct($request)
     {
 
         $this->request = $request;
-        $is_login = wp_validate_auth_cookie($request->get_param('token'), 'macro');
+        $is_login = wp_validate_auth_cookie($request->get_param('token'), 'sunflower');
         if ($is_login) {
-            $userAuthInfo = wp_parse_auth_cookie($request->get_param('token'), 'macro');
+            $userAuthInfo = wp_parse_auth_cookie($request->get_param('token'), 'sunflower');
             $this->user = get_user_by('login', $userAuthInfo['username'])->data;
         }
     }
@@ -105,7 +106,7 @@ class Apis
             ]
         );
         $user_booking_count = (new WP_Query($args))->post_count;
-        if ($user_booking_count > $user_all_booking_count+10) return ['code' => -1, 'msg' => 'The number of appointments has been used up', 'data' => null];
+        if ($user_booking_count > $user_all_booking_count + 10) return ['code' => -1, 'msg' => 'The number of appointments has been used up', 'data' => null];
         $res = wp_insert_post([
             'post_author' => $this->user->ID,
             'post_title' => $post_name,
@@ -163,28 +164,77 @@ class Apis
     }
 
 
-   //用户登录
+    //用户登录
     public function signIn(): array
     {
 
-       $username = sanitize_user($this->request->get_json_params()['username']);
+        $username = sanitize_user($this->request->get_json_params()['username']);
         $password = trim($this->request->get_json_params()['password']);
-         if (!$username || !$password) {
-           return ['code' => -1, 'msg' => '用户名或者密码不完整', 'data' =>''];
+        if (!$username || !$password) {
+            return ['code' => -1, 'msg' => '用户名或者密码不完整', 'data' => ''];
 
-          }
+        }
 
         $user = wp_authenticate($username, $password);
 
-       if(is_wp_error($user)){
+        if (is_wp_error($user)) {
 
-		     return ['code' => -1, 'msg' => $user->get_error_message(), 'data' =>$_GET];
-	   }
-        return ['code' => 200, 'msg' => 'success', 'data' => ['user'=>$user,'token'=>wp_generate_auth_cookie($user->ID, time() + 72000, 'sunflwoer')] ];
+            return ['code' => -1, 'msg' => $user->get_error_message(), 'data' => $_GET];
+        }
+        return ['code' => 200, 'msg' => 'success', 'data' => ['user' => $user, 'token' => wp_generate_auth_cookie($user->ID, time() + 72000, 'sunflower')]];
 
     }
 
+    //添加用户收藏
+    public function addUserLike(): array
+    {
 
+
+
+
+
+        // return delete_user_meta($this->user->ID,'likes');
+        if (!$this->user) return ['code' => -1, 'msg' => '登录失效，请重新登录', 'data' => null];
+        if($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+            return ['code'=>200,'msg'=>'success','data'=> get_user_meta($this->user->ID,'likes')];
+
+        }
+        $params = $this->request->get_json_params();
+        if (empty($params) || empty($params['id']) || empty($params['title'])) return ['code' => -1, 'msg' => '参数有误', 'data' => null];
+        $user_likes = get_user_meta($this->user->ID,'likes');
+        $item =  ['id' => $params['id'], 'title' => $params['title']];
+        $data = ['code' => 200];
+        $isNew = true;
+        if (empty($user_likes)) {
+            add_user_meta($this->user->ID, 'likes',$item);
+            $data['msg'] = '收藏完成';
+        }else{
+            $isNew= false;
+            $exist_index = -1;
+            foreach ($user_likes as $k=> $user_like) {
+                if($user_like['id'] === $item['id']){
+                    $exist_index = $k;
+                    break;
+                }
+            }
+            if($exist_index !== -1){
+                $data['code'] = -1;
+                $data['msg'] = '取消完成!';
+                delete_user_meta($this->user->ID,'likes',$item);
+
+            }else{
+                $data['msg'] = '收藏完成!';
+                !$isNew && add_user_meta($this->user->ID, 'likes',$item);
+
+            }
+        }
+
+        return $data;
+
+
+
+    }
 
 
 }
