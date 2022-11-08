@@ -57,23 +57,28 @@ class Sunflower
             },
             'permission_callback' => '__return_true'
         ));
-        //订阅
-         register_rest_route('sunflower', '/payRecordCreate', array(
-          'methods' => 'POST',
-           'callback' => function ($request) {
-              return (new Apis($request))->PayRecordCreate();
-          },
-          'permission_callback' => '__return_true'
-          ));
+
 
          //添加收藏
         register_rest_route('sunflower', '/likeAdd', array(
-            'methods' => ['POST'],
+            'methods' => ['POST','GET'],
             'callback' => function ($request) {
                 return (new Apis($request))->addUserLike();
             },
             'permission_callback' => '__return_true'
         ));
+
+        //用户保存
+        register_rest_route('sunflower', '/postsAdd', array(
+            'methods' => ['POST','GET'],
+            'callback' => function ($request) {
+                return (new Apis($request))->addPosts();
+            },
+            'permission_callback' => '__return_true'
+        ));
+
+
+
     }
 }
 

@@ -23,105 +23,6 @@ class Apis
     }
 
 
-//    public function bookingStatusUpdate(): array
-//    {
-//        if (!$this->user) return ['code' => -1, 'msg' => 'token invalid', 'data' => null];
-//        $post_id = $this->request->get_param('post_id');
-//        $user_id = self::getUserByCookie($this->request->get_param('token'))->ID;
-//        if (!$post_id) {
-//            return ['code' => -1, 'msg' => 'params error', 'data' => null];
-//        }
-//        $args = array(
-//            'post_type' => 'macro_booking_record',
-//            'posts_per_page' => 10,
-//            'p' => $post_id
-//        );
-//        $data = (new WP_Query($args))->posts;
-//        if (count($data) != 1) {
-//            return ['code' => -1, 'msg' => 'content not found', 'data' => null];
-//        }
-//        if ($data[0]->post_author != $user_id) {
-//            return ['code' => -1, 'msg' => 'not permission', 'data' => null];
-//        }
-//        if (get_post_meta($post_id, 'booking_status', true)['booking_status'] == '0') {
-//            update_post_meta($post_id, 'booking_status', 1);
-//            return ['code' => 1, 'msg' => 'success', 'data' => null];
-//        } else {
-//            return ['code' => -1, 'msg' => 'had changed', 'data' => null];
-//
-//        }
-//
-//    }
-
-
-    /**
-     * 创建订阅订单
-     * @return array
-     */
-    public function PayRecordCreate(): array
-    {
-
-
-        if (!$this->user) return ['code' => -1, 'msg' => 'login invalid', 'data' => null];
-        $post_name = $this->request->get_param('booking_name');
-        $booking_time = $this->request->get_param('booking_time');
-        if (empty($booking_time) || empty($post_name)) return ['code' => -1, 'msg' => 'params  invalid', 'data' => null];
-        if (!date_create($booking_time)) return ['code' => -1, 'msg' => 'date invalid', 'data' => null];
-        if (strtotime($booking_time) < time()) return ['code' => -1, 'msg' => 'Can\'t make an appointment before', 'data' => null];
-        if (strlen($post_name) > 50) return ['code' => -1, 'msg' => 'params error', 'data' => null];
-        $booking_course_title = explode(':', $post_name);
-        if (count($booking_course_title) != 2) {
-            return ['code' => -1, 'msg' => 'title format invalid', 'data' => null];
-        }
-
-        try {
-
-            $booking_course_title = $booking_course_title[0];
-            $booking_course_id = $this->request->get_param('course_id');
-
-            $user_orders = (new WC_Order($booking_course_id))->get_items();
-
-            if (count($user_orders) != 1) {
-                return ['code' => -1, 'msg' => 'course not found', 'data' => null];
-            }
-
-
-            $user_orders = current($user_orders);
-            $meta_data = current($user_orders->get_meta_data());
-            $user_all_booking_count = (int)$meta_data->value;
-            //Check the available schedule of the course
-
-
-        } catch (Exception $exception) {
-            return ['code' => -1, 'msg' => $exception->getMessage(), 'data' => null];
-        }
-
-        $args = array(
-            'post_type' => 'macro_booking_record',
-            'posts_per_page' => 10,
-            'post_status' => 'publish',
-            'author' => $this->user->ID,
-            'meta_query' => [
-                'booking_id' => $booking_course_id
-            ]
-        );
-        $user_booking_count = (new WP_Query($args))->post_count;
-        if ($user_booking_count > $user_all_booking_count + 10) return ['code' => -1, 'msg' => 'The number of appointments has been used up', 'data' => null];
-        $res = wp_insert_post([
-            'post_author' => $this->user->ID,
-            'post_title' => $post_name,
-            'post_status' => 'publish',
-            'post_name' => $post_name,
-            'post_type' => 'macro_booking_record'
-
-        ]);
-
-        update_post_meta($res, 'booking_status', 0);
-        update_post_meta($res, 'booking_time', $booking_time);
-        update_post_meta($res, 'booking_course_id', $booking_course_id);
-        update_post_meta($res, 'booking_course_title', $booking_course_title);
-        return ['code' => 1, 'data' => ['booking_id' => $res, 'left' => $user_all_booking_count - $user_booking_count], 'msg' => 'SUCCESS'];
-    }
 
 
     //用户注册
@@ -193,7 +94,7 @@ class Apis
 
 
 
-        // return delete_user_meta($this->user->ID,'likes');
+
         if (!$this->user) return ['code' => -1, 'msg' => '登录失效，请重新登录', 'data' => null];
         if($_SERVER['REQUEST_METHOD'] === 'GET') {
 
@@ -205,7 +106,7 @@ class Apis
         $user_likes = get_user_meta($this->user->ID,'likes');
         $item =  ['id' => $params['id'], 'title' => $params['title']];
         $data = ['code' => 200];
-        $isNew = true;
+
         if (empty($user_likes)) {
             add_user_meta($this->user->ID, 'likes',$item);
             $data['msg'] = '收藏完成';
@@ -234,6 +135,45 @@ class Apis
 
 
 
+    }
+
+
+
+    public function removePosts(){
+
+        if (!$this->user) return ['code' => -1, 'msg' => '登录失效，请重新登录', 'data' => null];
+        //删除自己的
+
+
+    }
+
+    public function addPosts(): array
+    {
+        if (!$this->user) return ['code' => -1, 'msg' => '登录失效，请重新登录', 'data' => null];
+
+        if($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+            return ['code'=>200,'msg'=>'success','data'=>get_posts(array('author_in'=>$this->user->ID))];
+
+        }
+
+        //用户超过50篇禁止保存
+       if( count_user_posts($this->user->ID) >50){
+           return ['code' => -1, 'msg' => '最多备份50篇！', 'data' => null];
+       }
+
+        $params = $this->request->get_json_params();
+        $my_post = array(
+            'post_title'    => wp_strip_all_tags( $params['title'] ),
+            'post_content'  => $params['content'],
+            'post_status'   => 'private',
+            'post_author'   => $this->user->ID
+        );
+       $res = wp_insert_post( $my_post );
+        if(is_wp_error($res)){
+            return ['code'=>-1,'msg'=>$res->get_error_message()];
+        }
+       return ['code' =>200,'msg'=>'保存成功'];
     }
 
 
