@@ -139,13 +139,7 @@ class Apis
 
 
 
-    public function removePosts(){
 
-        if (!$this->user) return ['code' => -1, 'msg' => '登录失效，请重新登录', 'data' => null];
-        //删除自己的
-
-
-    }
 
     public function addPosts(): array
     {
@@ -153,14 +147,52 @@ class Apis
 
         if($_SERVER['REQUEST_METHOD'] === 'GET') {
 
-            return ['code'=>200,'msg'=>'success','data'=>get_posts(array('author_in'=>$this->user->ID))];
+
+            return ['code'=>200,'msg'=>'success','data'=>get_posts(array('post_author'=>$this->user->ID,'post_status'=>'private'))];
 
         }
 
+        if($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+
+            //return ['data'=>get_posts(array('p'=>2626,'post_status'=>'private','post_author'=>5))];
+
+            $params = $this->request->get_params();
+            //查询该文章
+            $posts_id = $params['id'];
+            if(!isset($params['id'])){
+
+                return ['code' => -1, 'msg' => '参数有误', 'data' => null];
+            }
+
+            $ps = get_posts(array('p'=>$posts_id,'post_status'=>'private','post_author'=>$this->user->ID));
+
+
+
+            if(is_wp_error($ps)){
+                return ['code' => -1, 'msg' => '删除失败', 'data' => null];
+            }
+            if(count($ps) !== 1){
+                return ['code' => -1, 'msg' => '删除失败：内容不存在！'];
+            }
+
+
+
+
+
+            if($ps[0]->post_author !== $this->user->ID){
+                return ['code' => -1, 'msg' => '删除失败：无权限！', 'data' => null];
+            }
+            $r = wp_delete_post($posts_id,true);
+            return ['code'=>200,'msg'=>'删除成功','data'=>$r];
+
+        }
+
+
+
         //用户超过50篇禁止保存
-       if( count_user_posts($this->user->ID) >50){
-           return ['code' => -1, 'msg' => '最多备份50篇！', 'data' => null];
-       }
+        if( count_user_posts($this->user->ID) >50){
+            return ['code' => -1, 'msg' => '最多备份50篇！', 'data' => null];
+        }
 
         $params = $this->request->get_json_params();
         $my_post = array(
@@ -169,11 +201,11 @@ class Apis
             'post_status'   => 'private',
             'post_author'   => $this->user->ID
         );
-       $res = wp_insert_post( $my_post );
+        $res = wp_insert_post( $my_post );
         if(is_wp_error($res)){
             return ['code'=>-1,'msg'=>$res->get_error_message()];
         }
-       return ['code' =>200,'msg'=>'保存成功'];
+        return ['code' =>200,'msg'=>'保存成功'];
     }
 
 

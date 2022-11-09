@@ -30,8 +30,8 @@ class Sunflower
     function __construct()
     {
 
-        //创建支付记录帖子类型
-        add_action('init', function () {omiHooks::pay_record_fun();});
+
+
         //初始化自定义路由
         add_action('rest_api_init', function () {self::register_api();});
         omiHooks::closeUpdate();
@@ -70,7 +70,7 @@ class Sunflower
 
         //用户保存
         register_rest_route('sunflower', '/postsAdd', array(
-            'methods' => ['POST','GET'],
+            'methods' => ['POST','GET','DELETE'],
             'callback' => function ($request) {
                 return (new Apis($request))->addPosts();
             },
