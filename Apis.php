@@ -10,8 +10,8 @@ class Apis
 
     private $request;
     private $user;
-    private const WOO_SECRET = 'xxxx';//本地测试可写secret
-    private const WOO_KEY = 'xxx';//本地测试可写key
+    private const WOO_SECRET = 'xxxx'; //本地测试可写secret
+    private const WOO_KEY = 'xxx'; //本地测试可写key
     private const REMOTE_URL = 'xxxx';
 
 
@@ -52,9 +52,7 @@ class Apis
             return ['code' => 1, 'msg' => 'success', 'data' => null];
         } else {
             return ['code' => -1, 'msg' => 'had changed', 'data' => null];
-
         }
-
     }
 
 
@@ -82,7 +80,7 @@ class Apis
             $user_orders = (new WC_Order($booking_course_id))->get_items();
 
             if (count($user_orders) != 1) {
-                return ['code' => -1, 'msg' => 'course not found', 'data' => null];
+                return ['code' => -1, 'msg' => 'not found', 'data' => null];
             }
 
 
@@ -106,7 +104,7 @@ class Apis
             ]
         );
         $user_booking_count = (new WP_Query($args))->post_count;
-        if ($user_booking_count > $user_all_booking_count+10) return ['code' => -1, 'msg' => 'The number of appointments has been used up', 'data' => null];
+        if ($user_booking_count > $user_all_booking_count + 10) return ['code' => -1, 'msg' => 'The number of appointments has been used up', 'data' => null];
         $res = wp_insert_post([
             'post_author' => $this->user->ID,
             'post_title' => $post_name,
@@ -150,15 +148,12 @@ class Apis
 
             return ['code' => -1, 'msg' => 'account exist', 'data' => null];
         }
-
     }
 
     private static function getUserByCookie($cookie)
     {
         $userAuthInfo = wp_parse_auth_cookie($cookie, 'macro');
         return get_user_by('login', $userAuthInfo['username']);
-
-
     }
 
 
@@ -175,10 +170,10 @@ class Apis
             'author' => $this->user->ID,
             'meta_query' => [
                 'booking_time' =>
-                    array(
-                        array('key' => 'booking_time', 'value' => $start_booking_time->format('Y/m/d'), 'compare' => '>=', 'type' => 'DATE'),
-                        array('key' => 'booking_time', 'value' => $end_booking_time->format('Y/m/d'), 'compare' => '<=', 'type' => 'DATE'),
-                    )
+                array(
+                    array('key' => 'booking_time', 'value' => $start_booking_time->format('Y/m/d'), 'compare' => '>=', 'type' => 'DATE'),
+                    array('key' => 'booking_time', 'value' => $end_booking_time->format('Y/m/d'), 'compare' => '<=', 'type' => 'DATE'),
+                )
 
             ]
         );
@@ -187,11 +182,8 @@ class Apis
         foreach ($data as $post) {
             $post->booking_status = get_post_meta($post->ID, 'booking_status', true);
             $post->booking_time = get_post_meta($post->ID, 'booking_time', true);
-
         }
         return ['code' => 1, 'msg' => 'SUCCESS', 'data' => $data];
-
-
     }
 
     public function bookingSignIn(): array
@@ -201,7 +193,6 @@ class Apis
         $password = trim($this->request->get_param('password'));
         $user = wp_authenticate($username, $password);
         return ['code' => 1, 'msg' => 'success', 'user' => $user, 'token' => wp_generate_auth_cookie($user->ID, time() + 720000, 'macro')];
-
     }
 
 
@@ -258,21 +249,18 @@ class Apis
 
         try {
 
-            $data = wp_remote_post(self::REMOTE_URL ."/wp-json/wc/v3/orders?consumer_key=" . self::WOO_KEY . "&consumer_secret=" . self::WOO_SECRET,
+            $data = wp_remote_post(
+                self::REMOTE_URL . "/wp-json/wc/v3/orders?consumer_key=" . self::WOO_KEY . "&consumer_secret=" . self::WOO_SECRET,
                 array(
                     'headers' => array('Content-Type' => 'application/json'),
                     'timeout' => 30,
                     'body' => json_encode($data),
                 )
             );
-
         } catch (Exception $exception) {
             return ['code' => -1, 'msg' => 'SUCCESS', 'data' => $exception->getMessage()];
         }
 
         return ['code' => 1, 'msg' => 'SUCCESS', 'data' => $data];
-
     }
-
-
 }
